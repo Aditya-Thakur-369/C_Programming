@@ -1,0 +1,217 @@
+#include <stdio.h>
+#include <string.h>
+#include <conio.h>
+#include <stdlib.h>
+
+FILE *fp;
+FILE *ft;
+FILE *bl;
+
+void login();
+void newacc();
+void transaction();
+void anothertransaction();
+void asklogin();
+
+struct {
+	char user[20];
+	char pass[20];
+	char newuser[20];
+	char newpass[20];
+} s;
+
+struct balancing {
+	float balance;
+	float withdrow;
+	float deposit;
+} b = { 0.000};
+
+char file[255];
+
+int main() {
+	char op;
+	int num;
+	do {
+		printf("\n\t\t\t\t\t\t<== WELCOME TO ATM ==>");
+		printf("\n\t\tLOG IN\t( L / l ) \n\n\t\tSIGN UP\t( S / s ) \n\n\t\tEXIT\t( E / e ) \n\n\t\tPLEASE SELECT YOUR CHOICE --> ");
+		scanf("%c", &op);
+		switch (op) {
+			case 'S':
+			case 's':
+				newacc();
+				break;
+			case 'L':
+			case 'l':
+				login();
+				break;
+			case 'E':
+			case 'e': 
+			       exit('e');
+				break;
+				printf("\t\tError ......  please Select Valid Option");
+		}
+		printf("\n\t\t <== Do you Want To Do It Again ==> \n\t\tPRESS [ 1 ] -->\t \n\n");
+		scanf("%d",&num);
+		if(num==1){
+			main();
+		}
+		printf("\n\t<== Press any key to continue ==>\n");
+		getch();
+	} while (op == 'e' || op == 'E');
+	return 0;
+}
+//..................................................... Log in Program ...........................................................................
+void login() {
+	int found = 0 ;
+	fp = fopen("atm.txt", "rb");
+	printf("\t\tEnter Your Username --> ");
+	scanf("%s", &s.user);
+	printf("\n\t\tEnter Your Password --> ");
+	scanf("%s", &s.pass);
+	printf("\n\t\tThe Username Is %s And The Password Is %s\n", s.user, s.pass);
+	if (fp == NULL) {
+		printf("\tFile is empty");
+	} else {
+		int u = 0;
+		int p = 0;
+		int c = 0;
+		while (fscanf(fp, "%s", &file) == 1) {
+			char *fds = strtok(file, ";");
+			while (fds != NULL) {
+				if (c == 0) {
+					if (strcmp(fds, s.user) == 0) {
+						u = 1;
+					}
+					c++;
+				} else {
+					if (strcmp(fds, s.pass) == 0) {
+						if (u == 0) {
+							p = 0;
+						} else
+							p = 1;
+					}
+					c = 0;
+				}
+				fds = strtok(NULL, " ");
+			}
+			if (u == 1 && p == 1) {
+				found = 1;
+				printf("\n\t\t <<== Access Granted ==>>\n");
+				bl=fopen("Balancing.txt","a+");
+				fputs(s.user,bl);
+				fputs(";",bl);
+				fputs(s.pass,bl);
+				fputs("\n\n",bl);
+				fclose(bl);
+				transaction();
+				break;
+			}
+
+//			else{
+//				printf("\n\tAccess Denied\n");
+//				printf("\n\t<== Sorry You Need to Make Your Account First Then you Will Able TO Continue ==> \n ");
+		}
+	}
+	if(found == 0 ){
+		printf("\n\t\t\t\t\t<== Account Not Found ==> \n\n");
+	}
+}
+//............................................................... New Account ......................................................................
+void newacc() {
+	char number[11];
+	char name[20];
+	char email[50];
+	ft=fopen("info.txt","a+");
+	fp = fopen("atm.txt", "a+");
+	printf("\n\t\tEnter Your Username --> ");
+	scanf("%s",s.newuser);
+	fputs(s.newuser, fp);
+	fputs(s.newuser,ft);
+	fputs("\t\t\t",ft);
+	fputs(";", fp);
+	printf("\n\t\tEnter Your Password --> ");
+	scanf("%s",s.newpass);
+	fputs(s.newpass, fp);
+	fputs(s.newpass,ft);
+	fputs("\t\t\t",ft);
+	fputs("\n", fp);
+	printf("\n\t\tEnter Your Number --> ");
+	scanf("%s",&number);
+	fputs(number,ft);
+	fputs("\t\t\t",ft);
+	printf("\n\t\tEnter Your Name --> ");
+	scanf("%s",&name);
+	fputs(name,ft);
+	fputs("\t\t\t",ft);
+	printf("\n\t\tEnter Your E-mail --> ");
+    scanf("%s",email);
+	fputs(email,ft);
+	fputs("\n",ft);
+	printf("\n\t\tNow you are successfully Signed\n\n\t\t\t\t<== Thanks==>\n\n");
+	fclose(fp);
+	fclose(ft);
+	asklogin();
+}
+//...............................................................Transaction ........................................................................
+void transaction() {
+	int ch;
+	printf("\t\t\t\t\t\t<== WELCOME ==> \n");
+	printf("\n\t\t1. Withdrow \n");
+	printf("\n\t\t2. Deposit \n");
+	printf("\n\t\t3. Balance \n");
+	printf("\n\t\tChoice Your Choice : ");
+	scanf("%d",&ch);
+	switch(ch) {
+		case 1:
+			printf("\n\t\tHow Much Money You Wanna Withdrow --> ");
+			scanf("%f",&b.withdrow);
+			if(b.withdrow > b.balance) {
+				printf("\n\t\tInsuffient Balance ");
+			}
+			else{
+			    b.balance = b.balance - b.withdrow;
+				printf("\n\t\tYour Current balance is : %f",b.balance);
+			}
+			anothertransaction();
+			break;
+		case 2:
+			printf("\n\t\tHow Much Money You Wanna Deposit --> ");
+			scanf("%f",&b.deposit);
+			b.balance = b.balance + b.deposit;
+			printf("\n\t\tYour Current Balance : %f",b.balance);
+			anothertransaction();
+			break;
+		case 3: 
+	     	printf("\n\t\tYour Current Balance Is --> %f",b.balance);
+	     	anothertransaction();
+		default : printf("\n\t\t<<== Please Choose a Valid Reason ==> \n\n");
+	}
+}
+//.........................................................Another Transacation ..................................................................
+void anothertransaction() {
+	int at;
+	printf("\n\t\tDo You Want To Another Transaction \n\t\tThen Please press ( 1 ) --> ");
+	scanf("%d",&at);
+	if(at==1) {
+		transaction();
+	}
+	else 
+	{
+		printf("\t\t\t\t\t\t<== Thanks For Using Our ATM ==>  \n");
+	}
+}
+//.......................................................Aking For log in after Signing Up .......................................................
+void asklogin(){
+	int num;
+	printf("\n\t\tDO YOU WANT TO LOG IN PRESS ( 1 )  --> ");
+	scanf("%d",&num);
+	if(num==1){
+		login();
+	}
+	else 
+	{
+		printf("\t\t\t\t\t\t<== Thanks For Using Our ATM ==>  \n");
+	}
+}
+
+
